@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This template creates a s3 bucket with Standard -> Standard_IA -> Glacier -> Obsolote lifecycle policy. It also creates an IAM user with full access to the bucket and a access/secret access key pair. 
+Parameters:
+  DaysToStandardIA: 
+    Type: Number
+    Default: 30
+    Description: The number of days until the object becomes a STANDARD_IA class object. Must be greater or equal to 30
+  DaysToGlacier:
+    Type: Number
+    Default: 365
+    Description: The number of days until the object becomes a GLACIER class object.
+  DaysToDelete: 
+    Type: Number
+    Default: 1095
+    Description: The number of days until the object becomes obsolote and deleted
+    
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties: 
+      LifecycleConfiguration:
+        Rules:
+          - Id: convert-to-standard
+            Status: Enabled
+            Transitions:
+              - StorageClass: STANDARD_IA 
+                TransitionInDays: !Ref DaysToStandardIA
+          - Id: backup-to-glacier
+            Status: Enabled
+            Transitions:
+              - StorageClass: GLACIER
+                TransitionInDays: !Ref DaysToGlacier
+          - Id: obsolote
+            Status: Enabled
+            ExpirationInDays: !Ref DaysToDelete
+
+  MyUser:
+    Type: AWS::IAM::User
+    DependsOn: MyS3Bucket
+    Properties:
+      Path: "/"
+      Policies:
+        - PolicyName: !Join [-, [PolicyTo, !Ref MyS3Bucket]]
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement: 
+              - Effect: Allow
+                Action: 
+                  - s3:*
+                Resource: 
+                  - !GetAtt MyS3Bucket.Arn
+                  
+  MyAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref MyUser
+
+Outputs: 
+  S3BucketName: 
+    Description: The name of the s3 bucket created in this stack.
+    Value: !Ref MyS3Bucket
+
+  AccessKey:
+    Description: The access key to this S3 resource
+    Value: !Ref MyAccessKey
+
+  SecretAccessKey:
+    Description: The secret access key to this S3 resource
+    Value: !GetAtt MyAccessKey.SecretAccessKey
