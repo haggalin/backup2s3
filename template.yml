@@ -38,6 +38,7 @@ Resources:
                   - s3:*
                 Resource: 
                   - !GetAtt MyS3Bucket.Arn
+                  - !Join ["/", [!GetAtt MyS3Bucket.Arn, "*"]]
                   
   MyAccessKey:
     Type: AWS::IAM::AccessKey

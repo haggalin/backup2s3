@@ -9,12 +9,7 @@ function usage {
     exit 1
 }
 
-if [ "$#" -ne 1 ]; then
+if [ "$#" -ne 2 ]; then
     usage
 fi
-
-if [ "$1" -eq "-h"]; then
-    usage
-fi
-
 aws cloudformation ${1}-stack --stack-name ${2} --template-body file://template.yml --capabilities CAPABILITY_IAM
