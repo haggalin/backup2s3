@@ -1,18 +1,10 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: This template creates a s3 bucket with Standard -> Standard_IA -> Glacier -> Obsolote lifecycle policy. It also creates an IAM user with full access to the bucket and a access/secret access key pair. 
 Parameters:
-  DaysToStandardIA: 
-    Type: Number
-    Default: 30
-    Description: The number of days until the object becomes a STANDARD_IA class object. Must be greater or equal to 30
   DaysToGlacier:
     Type: Number
     Default: 365
     Description: The number of days until the object becomes a GLACIER class object.
-  DaysToDelete: 
-    Type: Number
-    Default: 1095
-    Description: The number of days until the object becomes obsolote and deleted
     
 Resources:
   MyS3Bucket:
@@ -24,15 +16,12 @@ Resources:
             Status: Enabled
             Transitions:
               - StorageClass: STANDARD_IA 
-                TransitionInDays: !Ref DaysToStandardIA
+                TransitionInDays: 30
           - Id: backup-to-glacier
             Status: Enabled
             Transitions:
               - StorageClass: GLACIER
                 TransitionInDays: !Ref DaysToGlacier
-          - Id: obsolote
-            Status: Enabled
-            ExpirationInDays: !Ref DaysToDelete
 
   MyUser:
     Type: AWS::IAM::User
